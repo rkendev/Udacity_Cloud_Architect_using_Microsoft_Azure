@@ -1,0 +1,179 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_WordPress_Server_name": {
+      "defaultValue": "WordPress-Server-2",
+      "type": "String"
+    },
+    "availabilitySets_WORDPRESS_SERVER_AVAILABILITY_SET_externalid": {
+      "defaultValue": "/subscriptions/6fe6105a-78a2-472c-b075-5840c51586de/resourceGroups/Contoso-RG/providers/Microsoft.Compute/availabilitySets/WORDPRESS-SERVER-AVAILABILITY-SET",
+      "type": "String"
+    },
+    "networkSecurityGroups_WORDPRESS_SERVER_2_nsg_externalid": {
+      "defaultValue": "/subscriptions/6fe6105a-78a2-472c-b075-5840c51586de/resourceGroups/Contoso-RG/providers/Microsoft.Network/networkSecurityGroups/WordPress-Server-2-nsg",
+      "type": "String"
+    },
+    "adminUsername": {
+      "type": "String",
+      "metadata": {
+        "description": "Administrator username for the VM"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Administrator password for the VM"
+      }
+    },
+    "subnetId": {
+      "type": "String",
+      "metadata": {
+        "description": "The ID of the subnet to deploy the NIC"
+      }
+    }
+  },
+  "variables": {
+    "nicName": "wordpress-server450-nic"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-11-01", // Ensure this is a supported API version
+      "name": "WordPress-Server-2-nsg",
+      "location": "eastus",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowAntivirusTraffic",
+            "properties": {
+              "priority": 100,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "10.0.0.7", // IP of the Antivirus Server
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "2222-2224"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-11-01",
+      "name": "[variables('nicName')]",
+      "location": "eastus",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'WordPress-Server-2-nsg')]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[parameters('subnetId')]"
+              },
+              "privateIPAllocationMethod": "Dynamic"
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'WordPress-Server-2-nsg')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2024-03-01",
+      "name": "[parameters('virtualMachines_WordPress_Server_name')]",
+      "location": "eastus",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+      ],
+      "tags": {
+        "Wordpress-Server": "Wordpress-Server"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_B1s"
+        },
+        "availabilitySet": {
+          "id": "[parameters('availabilitySets_WORDPRESS_SERVER_AVAILABILITY_SET_externalid')]"
+        },
+        "additionalCapabilities": {
+          "hibernationEnabled": false
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "canonical",
+            "offer": "0001-com-ubuntu-server-focal",
+            "sku": "20_04-lts-gen2",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "caching": "ReadWrite",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            },
+            "deleteOption": "Delete"
+          },
+          "dataDisks": [],
+          "diskControllerType": "SCSI"
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_WordPress_Server_name')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": false,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                  "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCtDrOEWfNzcUK5LLyiR490C83l0dav7geLxklhjV5kZSgjWJHT7bLw/OkAkpwT36ENTLjHG4E2EDlwEOjqYK8TkcicZuz0VMGi+OCtCsNbFlnfi9WBU7FUrTRMNJG3LG+J+7lGxZ8RKWfwI4Xi5yTmwmuiq1kqo6CMHN1sG8bXE7/Kha24WFlOJgBnoSULeizB1bol3+Mez9c2uxVp96OyRr6ZfqvHn7M8T/v2cND551C9aUvY3M/JjL2RzWUcc4uNGkI3zvw68f+HVewGuERcs546cDjdf7Iby1pYn1Mcri9X8jK89ozXhZWn5M5HhtSphvuw+oZJ8gJj8s1DkRmId6xec/IAj1g4pxSuGKgvQttXsxxHps/cl8n5mspgbGhH2PV9XQRQ+3hGe3LlBMG/VFGDv7KN6kp4Eofdl4DtHboXp8vSfUbrreoAhz2WJXM8LSAzJT4cwIAbMmmlSyTSHxssgGHa5fceRmDFvIUv+CMFLkQ+vFgS6aPEFMaKLzU= generated-by-azure"
+                }
+              ]
+            },
+            "provisionVMAgent": true,
+            "patchSettings": {
+              "patchMode": "AutomaticByPlatform",
+              "automaticByPlatformSettings": {
+                "rebootSetting": "IfRequired",
+                "bypassPlatformSafetyChecksOnUserSchedule": false
+              },
+              "assessmentMode": "ImageDefault"
+            }
+          },
+          "secrets": [],
+          "allowExtensionOperations": true
+        },
+        "securityProfile": {
+          "uefiSettings": {
+            "secureBootEnabled": true,
+            "vTpmEnabled": true
+          },
+          "securityType": "TrustedLaunch"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]",
+              "properties": {
+                "deleteOption": "Detach"
+              }
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_WordPress_Server_name": {
+      "value": "WordPress-Server-2"
+    },
+    "availabilitySets_WORDPRESS_SERVER_AVAILABILITY_SET_externalid": {
+      "value": "/subscriptions/6fe6105a-78a2-472c-b075-5840c51586de/resourceGroups/Contoso-RG/providers/Microsoft.Compute/availabilitySets/WORDPRESS-SERVER-AVAILABILITY-SET"
+    },
+    "networkSecurityGroups_WORDPRESS_SERVER_2_nsg_externalid": {
+      "value": "/subscriptions/6fe6105a-78a2-472c-b075-5840c51586de/resourceGroups/Contoso-RG/providers/Microsoft.Network/networkSecurityGroups/WordPress-Server-2-nsg"
+    },
+    "adminUsername": {
+      "value": "userx"
+    },
+    "adminPassword": {
+      "value": "Admin5000000"
+    },
+    "subnetId": {
+      "value": "/subscriptions/6fe6105a-78a2-472c-b075-5840c51586de/resourceGroups/Contoso-RG/providers/Microsoft.Network/virtualNetworks/WordPress-Server-vnet/subnets/Wordpress-subnet"
+    }
+  }
+}
