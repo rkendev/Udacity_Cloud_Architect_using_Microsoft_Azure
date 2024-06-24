@@ -3,4 +3,4 @@
 ## Files in Repository 
 The repository is structured to contain multiple projects, each in its own folder with a separate README.md file. The main folders include:
 
-- Moving fron On-Prem to Azure Cloud
+- Moving from On-Prem to Azure Cloud
