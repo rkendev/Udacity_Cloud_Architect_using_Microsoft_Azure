@@ -4,3 +4,5 @@
 The repository is structured to contain multiple projects, each in its own folder with a separate README.md file. The main folders include:
 
 - Moving from On-Prem to Azure Cloud
+- Provisioning for Azure Cost Optimization & Monitoring
+- Securing the Enterprise
